@@ -1,0 +1,40 @@
+# Данные парсинга
+product_links.txt
+product_details.csv
+products_from_seller.xlsx
+*.csv
+*.xlsx
+*.log
+
+# Браузеры и драйверы
+ungoogled-chromium*/
+chromedriver*/
+*.exe
+*.7z
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.spec
+.venv/
+venv/
+
+# Временные файлы
+docx_check_tmp/
+temp/
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

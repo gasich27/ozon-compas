@@ -1,0 +1,12 @@
+{
+    "seller_url": "https://www.ozon.ru/seller/YOUR-SELLER-SLUG/CATEGORY/",
+    "chrome_path": "",
+    "links_file": "product_links.txt",
+    "output_file": "product_details.csv",
+    "log_file": "parser.log",
+    "scroll_pause": 5,
+    "page_pause": 7,
+    "max_retries": 50,
+    "implicit_wait": 15,
+    "scroll_timeout": 1200
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Product</title></head>
+<body>
+<div data-widget="webProductHeading">
+    <h1>Книга: Тестовый товар — Издательство Пример</h1>
+</div>
+
+<div data-widget="webGallery">
+    <img src="https://cdn.ozon.ru/test-image.jpg" alt="Тестовый товар" />
+</div>
+
+<div data-widget="webShortCharacteristics">
+    <a href="/brand/person/ivanov-12345/">Иванов И.И.</a>
+    <a href="/brand/series/knizhnaya-seriya-67890/">Книжная серия</a>
+</div>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Книга: Тестовый товар",
+    "description": "Описание тестового товара для проверки парсера."
+}
+</script>
+</body>
+</html>
