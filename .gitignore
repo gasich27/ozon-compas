@@ -1,3 +1,4 @@
+# Python caches
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -5,16 +6,26 @@ __pycache__/
 .ruff_cache/
 .coverage
 .coverage.*
-.pytest_cache/
-.pytest_cache/
-.pytest_cache/
-.pytest-cache/
-pytest-cache-files-*/
+htmlcov/
+
+# Local environment
 .env
+.venv/
+venv/
+
+# Local runtime data
 data/*.db
-data/*.db-journal
+data/*.db-*
+data/.secret.key
+data/.web_secret
 data/parser_output/
+data/users/
+uploads/
 reports/
 logs/
 tmp/
 *.log
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

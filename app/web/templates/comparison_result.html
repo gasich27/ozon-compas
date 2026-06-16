@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block heading %}Результат сравнения{% endblock %}
+{% block eyebrow %}Рыночная позиция{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <div><span class="pill">{{ comparison.seller_position_by_price }}</span><h2>{{ comparison.seller_product.name }}</h2><p>Разница с медианной ценой рынка: <strong>{{ comparison.price_gap_percent or '—' }}%</strong></p></div>
+</section>
+<section class="metrics">
+  <article><span>Цена продавца</span><strong>{{ comparison.seller_price or '—' }}</strong><small>рублей</small></article>
+  <article><span>Медиана рынка</span><strong>{{ comparison.market_median_price or '—' }}</strong><small>рублей</small></article>
+  <article><span>Товаров маркета</span><strong>{{ comparison.competitors_count }}</strong><small>в сравнении</small></article>
+</section>
+<section class="panel">
+  <p class="eyebrow">Что делать</p><h3>Рекомендации</h3>
+  <ul class="recommendations">{% for item in comparison.recommendations %}<li>{{ item }}</li>{% endfor %}</ul>
+  <p class="muted">Отчёт сохранён: {{ report_dir }} · run #{{ run_id }}</p>
+</section>
+{% endblock %}

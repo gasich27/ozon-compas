@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block heading %}{{ dataset.name|short_text }}{% endblock %}
+{% block eyebrow %}Товары маркета{% endblock %}
+{% block content %}
+<section class="panel dataset-head">
+  <div>
+    <span class="badge {{ 'ok' if dataset.saved else 'warn' }}">{{ 'сохранён' if dataset.saved else 'временный' }}</span>
+    <p>{{ dataset.products_count or products|length }} товаров · источник: {{ dataset.source }}</p>
+  </div>
+  <div class="row">
+    <a class="button ghost" href="{{ url_for('dataset_download', dataset_id=dataset.id) }}">Скачать CSV</a>
+    <form method="post" action="{{ url_for('dataset_save', dataset_id=dataset.id) }}"><button class="button dark">{{ 'Убрать из сохранённых' if dataset.saved else 'Сохранить для будущего' }}</button></form>
+    <form method="post" action="{{ url_for('dataset_analyze', dataset_id=dataset.id) }}"><button class="button">Обработать данные</button></form>
+  </div>
+</section>
+{% if analysis %}
+<section class="metrics">
+  <article><span>Товаров</span><strong>{{ analysis.total_products }}</strong><small>в обработке</small></article>
+  <article><span>Медианная цена</span><strong>{{ analysis.median_price or '—' }}</strong><small>рублей</small></article>
+  <article><span>Средний рейтинг</span><strong>{{ analysis.average_rating or '—' }}</strong><small>по рынку</small></article>
+</section>
+{% endif %}
+<section class="panel table-panel">
+  <form method="post" action="{{ url_for('dataset_delete_rows', dataset_id=dataset.id) }}">
+    <div class="panel-head">
+      <div><p class="eyebrow">Предпросмотр</p><h3>Таблица товаров</h3></div>
+      <div class="row"><small>первые 100 строк</small><button class="button ghost" type="submit">Удалить выбранные</button></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th></th><th>Товар</th><th>Цена</th><th>Отзывы</th><th>Рейтинг</th></tr></thead>
+    <tbody>{% for product in products %}<tr><td><input class="row-check" type="checkbox" name="delete_positions" value="{{ product.position }}"></td><td><a href="{{ product.product_url }}" target="_blank" title="{{ product.name }}">{{ product.name|short_text }}</a></td><td>{{ product.price or '—' }}</td><td>{{ product.reviews_count or '—' }}</td><td>{{ product.average_rating or '—' }}</td></tr>{% endfor %}</tbody></table></div>
+  </form>
+</section>
+{% endblock %}

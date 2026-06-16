@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block heading %}Сравнение{% endblock %}
+{% block eyebrow %}Товар против рынка{% endblock %}
+{% block content %}
+<section class="panel form-card compare-card">
+  {% if not current_user %}
+  <div class="empty">Войдите, чтобы выбрать свой товар и данные маркета.</div><a class="button" href="{{ url_for('login', next=url_for('compare')) }}">Войти</a>
+  {% elif seller_products and datasets %}
+  <form method="post" action="{{ url_for('compare_run') }}">
+    <label>Товар селлера<select name="seller_product_id" required>{% for product in seller_products %}<option value="{{ product.id }}">{{ product.name }} · {{ product.price or 'без цены' }}</option>{% endfor %}</select></label>
+    <label>Набор товаров маркета<select name="dataset_id" required>{% for item in datasets %}<option value="{{ item.id }}">{{ item.name }} · {{ item.products_count or '—' }} товаров</option>{% endfor %}</select></label>
+    <label>Лимит<input type="number" name="limit" min="1" placeholder="Все товары"></label>
+    <button class="button wide">Сравнить товар</button>
+  </form>
+  {% elif not seller_products %}
+  <div class="empty">Сначала синхронизируйте товары селлера через Seller API.</div><a class="button" href="{{ url_for('seller_products') }}">Перейти к товарам</a>
+  {% else %}
+  <div class="empty">Сначала запустите парсер или загрузите CSV маркета.</div><a class="button" href="{{ url_for('competitors') }}">Перейти к парсингу</a>
+  {% endif %}
+</section>
+{% endblock %}

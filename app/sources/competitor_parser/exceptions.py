@@ -16,3 +16,7 @@ class ExternalParserTimeoutError(ExternalParserError):
 
 class ExternalParserOutputNotFoundError(ExternalParserError):
     """The external parser did not produce a fresh CSV file."""
+
+
+class ExternalParserCancelledError(ExternalParserError):
+    """The external parser was cancelled by the user."""

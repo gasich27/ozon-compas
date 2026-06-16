@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block heading %}Результат обработки{% endblock %}
+{% block eyebrow %}Товары маркета{% endblock %}
+{% block content %}
+<section class="metrics">
+  <article><span>Товаров</span><strong>{{ analysis.total_products }}</strong><small>в выборке</small></article>
+  <article><span>Медианная цена</span><strong>{{ analysis.median_price or '—' }}</strong><small>рублей</small></article>
+  <article><span>Средний рейтинг</span><strong>{{ analysis.average_rating or '—' }}</strong><small>по рынку</small></article>
+</section>
+<section class="panel table-panel">
+  <div class="panel-head">
+    <div><p class="eyebrow">Выборка</p><h3>Товары маркета</h3></div>
+    <div class="row"><a class="button ghost" href="{{ url_for('dataset_download', dataset_id=dataset.id) }}">Скачать CSV</a><a class="button" href="{{ url_for('dataset_detail', dataset_id=dataset.id) }}">Открыть набор</a></div>
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Товар</th><th>Цена</th><th>Отзывы</th><th>Рейтинг</th></tr></thead>
+  <tbody>{% for product in products[:30] %}<tr><td><a href="{{ product.product_url }}" target="_blank" title="{{ product.name }}">{{ product.name|short_text }}</a></td><td>{{ product.price or '—' }}</td><td>{{ product.reviews_count or '—' }}</td><td>{{ product.average_rating or '—' }}</td></tr>{% endfor %}</tbody></table></div>
+  <p class="muted">Отчёт сохранён: {{ report_dir }} · run #{{ run_id }}</p>
+</section>
+{% endblock %}

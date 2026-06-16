@@ -16,6 +16,7 @@ def analyze_competitor_csv(
     encoding: str = "utf-8",
     limit: int | None = None,
     source: str = "external_parser",
+    user_id: int = 0,
 ) -> tuple[list, dict, Path, int]:
     products = CompetitorCsvReader(encoding=encoding).load(csv_path, limit=limit)
     analysis = analyze_competitor_products(products)
@@ -26,6 +27,7 @@ def analyze_competitor_csv(
         total_products=len(products),
         status="success",
         result=analysis,
+        user_id=user_id,
     )
     database.save_competitor_products(products, run_id)
     report_dir = create_competitor_report(reports_dir, products, analysis)

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Регистрация · Ozon Radar{% endblock %}
+{% block auth_content %}
+<section class="auth-card">
+  <a class="auth-brand" href="{{ url_for('register') }}"><span class="brand-mark">OR</span> Ozon Radar</a>
+  <p class="eyebrow">Новый аккаунт</p>
+  <h1>Создать кабинет</h1>
+  <p>Один аккаунт хранит собственные Seller API-ключи, товары и данные маркета.</p>
+  <form method="post" action="{{ url_for('register_submit') }}">
+    <label>Электронная почта<input type="email" name="email" required autocomplete="email"></label>
+    <label>Пароль<input type="password" name="password" minlength="8" required autocomplete="new-password"></label>
+    <button class="button wide">Создать аккаунт</button>
+  </form>
+  <p class="auth-switch">Уже зарегистрированы? <a href="{{ url_for('login') }}">Войти</a></p>
+</section>
+{% endblock %}

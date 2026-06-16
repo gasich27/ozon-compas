@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block heading %}Парсинг маркета{% endblock %}
+{% block eyebrow %}Товары маркета{% endblock %}
+{% block content %}
+<section class="grid two parser-actions">
+  <article class="panel form-card accent-border">
+    <p class="eyebrow">Новый сбор</p><h3>Запустить внешний парсер</h3>
+    <p>После запуска откроется экран процесса. Результат появится автоматически.</p>
+    {% if current_user %}<form method="post" action="{{ url_for('competitors_parse') }}">
+      <label>Ссылка Ozon<input type="url" name="url" required placeholder="https://www.ozon.ru/search/?text=..."></label>
+      <label>Таймаут, сек.<input type="number" name="timeout" min="1" value="900"></label>
+      <button class="button wide">Запустить парсер</button>
+    </form>{% else %}<a class="button wide" href="{{ url_for('login', next=url_for('competitors')) }}">Войти и запустить парсер</a>{% endif %}
+  </article>
+  <article class="panel form-card">
+    <p class="eyebrow">Готовые данные</p><h3>Загрузить CSV</h3>
+    <p>Файл будет добавлен в вашу библиотеку и останется доступен для сравнения.</p>
+    {% if current_user %}<form class="upload-form" method="post" action="{{ url_for('competitors_upload') }}" enctype="multipart/form-data">
+      <label class="file-drop">CSV-файл<span>Выберите готовый файл с товарами маркета. После загрузки он появится в библиотеке и будет доступен для анализа.</span><input type="file" name="csv_file" accept=".csv" required></label>
+      <button class="button dark wide">Загрузить в библиотеку</button>
+    </form>{% else %}<a class="button dark wide" href="{{ url_for('login', next=url_for('competitors')) }}">Войти и загрузить CSV</a>{% endif %}
+  </article>
+</section>
+<section class="panel table-panel">
+  <div class="panel-head"><div><p class="eyebrow">Библиотека</p><h3>Мои наборы данных</h3></div><span class="badge ok">{{ datasets|length }}</span></div>
+  {% if datasets %}
+  <div class="dataset-grid">{% for item in datasets %}
+    <a class="dataset-card" href="{{ url_for('dataset_detail', dataset_id=item.id) }}">
+      <span class="dataset-source">{{ 'парсер' if item.source == 'external_parser' else 'CSV' }}</span>
+      <strong title="{{ item.name }}">{{ item.name|short_text }}</strong>
+      <small>{{ item.products_count or '—' }} товаров · {{ 'сохранён' if item.saved else 'временный' }}</small>
+    </a>
+  {% endfor %}</div>
+  {% else %}<div class="empty">{{ 'Здесь появятся результаты парсинга и загруженные CSV.' if current_user else 'После входа здесь будет ваша библиотека данных маркета.' }}</div>{% endif %}
+</section>
+{% endblock %}

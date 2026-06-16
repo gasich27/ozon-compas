@@ -18,8 +18,9 @@ def compare_with_csv(
     reports_dir: Path,
     encoding: str = "utf-8",
     limit: int | None = None,
+    user_id: int = 0,
 ) -> tuple[dict, Path, int]:
-    seller_product = database.get_seller_product(seller_product_id)
+    seller_product = database.get_seller_product(seller_product_id, user_id=user_id)
     if seller_product is None:
         raise LookupError(
             "Товар селлера не найден. Сначала выполните seller sync."
@@ -37,6 +38,7 @@ def compare_with_csv(
         total_products=len(competitors),
         status="success",
         result=comparison,
+        user_id=user_id,
     )
     database.save_competitor_products(competitors, run_id)
     report_dir = create_comparison_report(

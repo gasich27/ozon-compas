@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block heading %}Обзор рынка{% endblock %}
+{% block eyebrow %}Рабочая панель{% endblock %}
+{% block content %}
+<section class="hero dashboard-hero">
+  <div>
+    <span class="pill">единое окно для работы с маркетом</span>
+    <h2>Свои товары и рынок<br>на одном радаре.</h2>
+    <p>Синхронизируйте каталог, запускайте парсинг маркета и сравнивайте предложения без командной строки.</p>
+  </div>
+  <a class="button light" href="{{ url_for('competitors') }}">Открыть парсинг маркета</a>
+</section>
+<section class="metrics">
+  <article><span>Товаров селлера</span><strong>{{ stats.seller_products }}</strong><small>в вашем каталоге</small></article>
+  <article><span>Наборов маркета</span><strong>{{ stats.competitor_products }}</strong><small>CSV и результаты парсинга</small></article>
+  <article><span>Запусков обработки</span><strong>{{ stats.analysis_runs }}</strong><small>за всё время</small></article>
+</section>
+<section class="grid two dashboard-actions">
+  <article class="panel action-card">
+    <span class="number">01</span><h3>Подключить свой каталог</h3>
+    <p>Добавить Seller API, получить товары, цены и остатки.</p>
+    <a href="{{ url_for('seller_products') }}">Перейти к товарам →</a>
+  </article>
+  <article class="panel action-card accent">
+    <span class="number">02</span><h3>Собрать товары маркета</h3>
+    <p>Запустить браузерный парсер или загрузить готовый CSV.</p>
+    <a href="{{ url_for('competitors') }}">Открыть парсер →</a>
+  </article>
+</section>
+{% if not current_user %}
+<section class="guest-banner">
+  <div><strong>Хотите сохранить данные?</strong><span>Войдите или создайте аккаунт перед первым действием.</span></div>
+  <div class="row"><a class="button ghost" href="{{ url_for('login') }}">Войти</a><a class="button" href="{{ url_for('register') }}">Регистрация</a></div>
+</section>
+{% endif %}
+{% endblock %}

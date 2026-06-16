@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block heading %}Мои товары{% endblock %}
+{% block eyebrow %}Seller API{% endblock %}
+{% block content %}
+<section class="grid two seller-grid">
+  <article class="panel seller-card">
+    <div class="panel-head">
+      <div><p class="eyebrow">Подключение</p><h3>Ozon Seller API</h3></div>
+      <span class="badge {{ 'ok' if api_configured else 'warn' }}">{{ 'ключи сохранены' if api_configured else 'нужны ключи' }}</span>
+    </div>
+    <p>Ключи зашифрованы и привязаны только к вашему аккаунту. Их можно заменить в любой момент.</p>
+    {% if current_user %}<form method="post" action="{{ url_for('seller_credentials') }}">
+      <label>OZON_CLIENT_ID<input name="client_id" value="{{ client_id }}" required placeholder="Client ID"></label>
+      <label>OZON_API_KEY<input type="password" name="api_key" required placeholder="{{ 'Введите новый ключ для замены' if api_configured else 'API Key' }}"></label>
+      <button class="button">Сохранить ключи</button>
+    </form>
+    {% if api_configured %}
+    <div class="seller-api-actions top-gap">
+      <form method="post" action="{{ url_for('seller_check_api') }}"><button class="button ghost wide">Проверить подключение</button></form>
+      <form method="post" action="{{ url_for('seller_sync') }}" class="seller-sync-form">
+        <input type="number" name="limit" min="1" placeholder="Лимит">
+        <button class="button">Синхронизировать</button>
+      </form>
+    </div>
+    {% endif %}
+    {% else %}
+    <a class="button wide" href="{{ url_for('login', next=url_for('seller_products')) }}">Войти и подключить Seller API</a>
+    {% endif %}
+  </article>
+  <article class="panel seller-card">
+    <p class="eyebrow">Отчёт</p><h3>Аналитика каталога</h3>
+    <p>Средние цены, остатки, рейтинг и товары без наличия.</p>
+    <p class="muted compact">После входа можно создать отчёт и скачать его в TXT, JSON или XLSX.</p>
+    {% if current_user %}
+    <form method="post" action="{{ url_for('seller_analyze') }}"><button class="button dark">Создать отчёт</button></form>
+    {% if seller_report %}
+    <div class="report-downloads">
+      <span>Последний отчёт: {{ seller_report.created_at }}</span>
+      <div class="row">
+        <a class="button ghost" href="{{ url_for('seller_report_download', format_name='txt') }}">TXT</a>
+        <a class="button ghost" href="{{ url_for('seller_report_download', format_name='json') }}">JSON</a>
+        <a class="button ghost" href="{{ url_for('seller_report_download', format_name='xlsx') }}">XLSX</a>
+      </div>
+    </div>
+    {% endif %}
+    {% else %}<a class="button dark" href="{{ url_for('login', next=url_for('seller_products')) }}">Войти</a>{% endif %}
+  </article>
+</section>
+<section class="panel table-panel">
+  <div class="panel-head"><div><p class="eyebrow">Каталог</p><h3>{{ products|length }} товаров</h3></div></div>
+  {% if products %}
+  <div class="table-wrap"><table><thead><tr><th>Товар</th><th>ID</th><th>Цена</th><th>Остаток</th><th>Рейтинг</th></tr></thead>
+  <tbody>{% for product in products %}<tr><td><a href="{{ url_for('seller_product', product_id=product.id) }}">{{ product.name }}</a></td><td>{{ product.id }}</td><td>{{ product.price or '—' }}</td><td>{{ product.stock or 0 }}</td><td>{{ product.rating or '—' }}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty">Каталог пуст. Сохраните ключи и запустите синхронизацию.</div>{% endif %}
+</section>
+{% endblock %}

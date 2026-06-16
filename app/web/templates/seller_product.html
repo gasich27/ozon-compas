@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block heading %}{{ product.name }}{% endblock %}
+{% block eyebrow %}Карточка товара{% endblock %}
+{% block content %}
+<section class="panel detail">
+  <dl>
+    <div><dt>ID</dt><dd>{{ product.id }}</dd></div>
+    <div><dt>Артикул</dt><dd>{{ product.sku or '—' }}</dd></div>
+    <div><dt>Цена</dt><dd>{{ product.price or '—' }}</dd></div>
+    <div><dt>Остаток</dt><dd>{{ product.stock or 0 }}</dd></div>
+    <div><dt>Рейтинг</dt><dd>{{ product.rating or '—' }}</dd></div>
+    <div><dt>Отзывы</dt><dd>{{ product.reviews_count or '—' }}</dd></div>
+  </dl>
+  <a class="button" href="{{ url_for('compare') }}">Сравнить с рынком</a>
+</section>
+{% endblock %}

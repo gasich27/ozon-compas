@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Ozon Seller Radar{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+<video class="background-video" autoplay muted playsinline aria-hidden="true">
+  <source src="{{ url_for('static', filename='gradient-background.mp4') }}" type="video/mp4">
+</video>
+<div class="background-tint" aria-hidden="true"></div>
+{% if request.endpoint in ('login', 'register') %}
+<main class="auth-main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+  {% endwith %}
+  {% block auth_content %}{% endblock %}
+</main>
+{% else %}
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('dashboard') }}">
+      <span class="brand-mark">OR</span>
+      <span>Ozon Radar<small>seller intelligence</small></span>
+    </a>
+    <nav>
+      <span class="nav-indicator" aria-hidden="true"></span>
+      <a class="{{ 'active' if current_path == '/' else '' }}" href="{{ url_for('dashboard') }}">Главная</a>
+      <a class="{{ 'active' if current_path.startswith('/seller') else '' }}" href="{{ url_for('seller_products') }}">Мои товары</a>
+      <a class="{{ 'active' if current_path.startswith('/competitors') else '' }}" href="{{ url_for('competitors') }}">Парсинг товаров</a>
+      <a class="{{ 'active' if current_path.startswith('/compare') else '' }}" href="{{ url_for('compare') }}">Сравнение</a>
+    </nav>
+    <div class="sidebar-note">
+      {% if current_user %}
+        <div class="account-row">
+          <span>{{ current_user.email }}</span>
+          <form method="post" action="{{ url_for('logout') }}"><button class="link-button">Выйти</button></form>
+        </div>
+      {% else %}
+        Данные сохраняются после входа
+        <a class="sidebar-login" href="{{ url_for('login') }}">Войти</a>
+      {% endif %}
+    </div>
+  </aside>
+  <main>
+    <header class="topbar">
+      <div><p class="eyebrow">{% block eyebrow %}Ozon Seller Radar{% endblock %}</p><h1>{% block heading %}Панель управления{% endblock %}</h1></div>
+      <span class="status early"><i></i> Ранний доступ</span>
+    </header>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% endif %}
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

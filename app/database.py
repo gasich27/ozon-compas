@@ -26,10 +26,27 @@ class Database:
 
     def _initialize(self) -> None:
         with self.connect() as connection:
+            self._migrate_seller_products(connection)
             connection.executescript(
                 """
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                    password_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS user_api_credentials (
+                    user_id INTEGER PRIMARY KEY,
+                    ozon_client_id TEXT NOT NULL,
+                    ozon_api_key TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
                 CREATE TABLE IF NOT EXISTS seller_products (
-                    id TEXT PRIMARY KEY,
+                    user_id INTEGER NOT NULL DEFAULT 0,
+                    id TEXT NOT NULL,
                     name TEXT NOT NULL,
                     price REAL,
                     stock INTEGER,
@@ -37,7 +54,8 @@ class Database:
                     product_url TEXT,
                     rating REAL,
                     reviews_count INTEGER,
-                    updated_at TEXT NOT NULL
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY(user_id, id)
                 );
 
                 CREATE TABLE IF NOT EXISTS competitor_products (
@@ -55,6 +73,7 @@ class Database:
 
                 CREATE TABLE IF NOT EXISTS analysis_runs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL DEFAULT 0,
                     mode TEXT NOT NULL,
                     source TEXT NOT NULL,
                     marketplace TEXT NOT NULL,
@@ -63,8 +82,95 @@ class Database:
                     result_json TEXT,
                     created_at TEXT NOT NULL
                 );
+
+                CREATE TABLE IF NOT EXISTS competitor_datasets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    source TEXT NOT NULL,
+                    source_url TEXT,
+                    file_path TEXT NOT NULL,
+                    original_filename TEXT,
+                    products_count INTEGER,
+                    analysis_run_id INTEGER,
+                    saved INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS parser_jobs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    url TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    message TEXT,
+                    dataset_id INTEGER,
+                    error TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS report_rate_limits (
+                    user_id INTEGER NOT NULL,
+                    report_type TEXT NOT NULL,
+                    last_created_at TEXT NOT NULL,
+                    PRIMARY KEY(user_id, report_type),
+                    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
                 """
             )
+            self._ensure_column(connection, "analysis_runs", "user_id", "INTEGER NOT NULL DEFAULT 0")
+
+    @staticmethod
+    def _migrate_seller_products(connection: sqlite3.Connection) -> None:
+        existing = connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='seller_products'"
+        ).fetchone()
+        if existing is None:
+            return
+        columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(seller_products)")
+        }
+        if "user_id" in columns:
+            return
+        connection.executescript(
+            """
+            ALTER TABLE seller_products RENAME TO seller_products_legacy;
+            CREATE TABLE seller_products (
+                user_id INTEGER NOT NULL DEFAULT 0,
+                id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                price REAL,
+                stock INTEGER,
+                sku TEXT,
+                product_url TEXT,
+                rating REAL,
+                reviews_count INTEGER,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY(user_id, id)
+            );
+            INSERT INTO seller_products (
+                user_id, id, name, price, stock, sku, product_url,
+                rating, reviews_count, updated_at
+            )
+            SELECT
+                0, id, name, price, stock, sku, product_url,
+                rating, reviews_count, updated_at
+            FROM seller_products_legacy;
+            DROP TABLE seller_products_legacy;
+            """
+        )
+
+    @staticmethod
+    def _ensure_column(
+        connection: sqlite3.Connection, table: str, column: str, definition: str
+    ) -> None:
+        columns = {
+            row["name"] for row in connection.execute(f"PRAGMA table_info({table})")
+        }
+        if column not in columns:
+            connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
     def create_analysis_run(
         self,
@@ -75,16 +181,18 @@ class Database:
         total_products: int,
         status: str,
         result: dict | None = None,
+        user_id: int = 0,
     ) -> int:
         with self.connect() as connection:
             cursor = connection.execute(
                 """
                 INSERT INTO analysis_runs (
-                    mode, source, marketplace, total_products, status,
+                    user_id, mode, source, marketplace, total_products, status,
                     result_json, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
+                    user_id,
                     mode,
                     source,
                     marketplace,
@@ -126,10 +234,13 @@ class Database:
                 rows,
             )
 
-    def get_seller_product(self, product_id: str) -> SellerProduct | None:
+    def get_seller_product(
+        self, product_id: str, user_id: int = 0
+    ) -> SellerProduct | None:
         with self.connect() as connection:
             row = connection.execute(
-                "SELECT * FROM seller_products WHERE id = ?", (str(product_id),)
+                "SELECT * FROM seller_products WHERE user_id = ? AND id = ?",
+                (user_id, str(product_id)),
             ).fetchone()
         if row is None:
             return None
@@ -144,15 +255,17 @@ class Database:
             reviews_count=row["reviews_count"],
         )
 
-    def upsert_seller_product(self, product: SellerProduct) -> None:
+    def upsert_seller_product(
+        self, product: SellerProduct, user_id: int = 0
+    ) -> None:
         with self.connect() as connection:
             connection.execute(
                 """
                 INSERT INTO seller_products (
-                    id, name, price, stock, sku, product_url, rating,
+                    user_id, id, name, price, stock, sku, product_url, rating,
                     reviews_count, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(id) DO UPDATE SET
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(user_id, id) DO UPDATE SET
                     name=excluded.name,
                     price=excluded.price,
                     stock=excluded.stock,
@@ -163,6 +276,7 @@ class Database:
                     updated_at=excluded.updated_at
                 """,
                 (
+                    user_id,
                     product.id,
                     product.name,
                     product.price,

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block heading %}Не удалось выполнить действие{% endblock %}
+{% block eyebrow %}Ошибка{% endblock %}
+{% block content %}
+<section class="panel">
+  <p>{{ message }}</p>
+  <a class="button" href="{{ url_for('dashboard') }}">Вернуться на главную</a>
+</section>
+{% endblock %}

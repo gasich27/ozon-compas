@@ -1,6 +1,36 @@
 # Ozon Seller Radar
 
-### CLI/backend-сервис для хранения товаров селлера Ozon, анализа конкурентов и сравнения товара селлера с рынком.
+### CLI/backend-сервис и web-интерфейс для хранения товаров селлера Ozon, парсинга маркета и сравнения товара селлера с рынком.
+
+## Web interface
+
+Install dependencies and start the local website:
+
+```bash
+python -m pip install -r requirements.txt
+python web.py
+```
+
+Open `http://127.0.0.1:8000` in the browser. The website provides Seller API
+sync, competitor parsing, CSV analysis, and product comparison without using
+CLI commands.
+
+### User accounts
+
+The web interface starts with email/password registration. Each account has
+isolated Seller API credentials, seller products, uploaded CSV files, parser
+results, analyses, and comparisons.
+
+Ozon `Client-Id` and `Api-Key` are entered on the "Мои товары" page. They are
+encrypted in SQLite and can be replaced later. The encryption key is generated
+locally in `data/.secret.key` and is excluded from Git.
+
+### Parser workflow
+
+Parser runs are started in the background. The browser displays a progress
+screen and automatically opens the resulting dataset when parsing completes.
+Each dataset can be downloaded, saved in the user's library, analyzed, and
+selected later for product comparison.
 
 ## Установка
 

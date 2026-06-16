@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block heading %}Парсинг маркета{% endblock %}
+{% block eyebrow %}Процесс выполняется{% endblock %}
+{% block content %}
+<section class="panel job-panel"
+  data-job-url="{{ url_for('parser_job_status', job_id=job.id) }}"
+  data-cancel-url="{{ url_for('parser_job_cancel', job_id=job.id) }}">
+  <div class="loader-orbit"><i></i><span>OR</span></div>
+  <h2 id="job-title">Собираем товары маркета</h2>
+  <p id="job-message">{{ job.message }}</p>
+  <div class="progress-track"><span></span></div>
+  <button id="cancel-job" class="button ghost danger">Отменить парсинг</button>
+</section>
+<script>
+const panel = document.querySelector('.job-panel');
+const message = document.querySelector('#job-message');
+const title = document.querySelector('#job-title');
+const cancelButton = document.querySelector('#cancel-job');
+let stopped = false;
+cancelButton.addEventListener('click', async () => {
+  cancelButton.disabled = true;
+  cancelButton.textContent = 'Отменяем...';
+  await fetch(panel.dataset.cancelUrl, {method: 'POST'});
+});
+async function poll() {
+  if (stopped) return;
+  const response = await fetch(panel.dataset.jobUrl);
+  const job = await response.json();
+  message.textContent = job.message || '';
+  if (job.status === 'success') {
+    window.location.href = job.result_url;
+    return;
+  }
+  if (job.status === 'cancelled') {
+    stopped = true;
+    panel.classList.add('job-cancelled');
+    title.textContent = 'Парсинг отменён';
+    cancelButton.remove();
+    return;
+  }
+  if (job.status === 'error') {
+    stopped = true;
+    panel.classList.add('job-error');
+    title.textContent = 'Не удалось завершить парсинг';
+    message.textContent = job.error || job.message;
+    cancelButton.remove();
+    return;
+  }
+  setTimeout(poll, 1200);
+}
+poll();
+</script>
+{% endblock %}
