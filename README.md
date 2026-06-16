@@ -1,124 +1,85 @@
 # Ozon Seller Radar
 
-Ozon Seller Radar is a local CLI and web app for Ozon sellers. It helps with three workflows:
+Ozon Seller Radar — локальный веб-сервис для продавца Ozon.  
+Основной способ работы — браузер. Здесь можно:
 
-1. Seller catalog sync through Ozon Seller API.
-2. Market parsing through the existing external Ozon parser.
-3. Comparison of a seller product against the market.
+- синхронизировать товары селлера через Ozon Seller API;
+- запускать внешний парсер маркета;
+- загружать готовые CSV;
+- редактировать наборы данных;
+- сравнивать товар селлера с другими товарами маркета;
+- получать отчёты и аналитику;
+- хранить всё отдельно для каждого пользователя.
 
-The project now includes a simple web interface with a custom visual layer, user accounts, saved datasets, reports, and CSV download/edit support.
+## Как это устроено
 
-## What It Does
+- Данные хранятся в SQLite.
+- У каждого пользователя свои:
+  - логин и пароль;
+  - ключи `OZON_CLIENT_ID` и `OZON_API_KEY`;
+  - товары селлера;
+  - загруженные CSV;
+  - результаты парсинга;
+  - отчёты и сравнения.
+- Внешний парсер уже существует отдельно в папке `ozon-seller-parser/`.
+- Ozon Seller Radar не меняет внутреннюю логику этого парсера.
+- Парсер запускается как отдельный процесс, после чего его CSV читается и отправляется в аналитику.
 
-- Stores seller data in SQLite.
-- Keeps each user's API credentials, products, uploaded CSVs, parser results, and reports isolated.
-- Runs the external parser as a subprocess without changing its internals.
-- Reads parser CSV output and sends it into analytics and comparison.
-- Generates TXT, JSON, and XLSX reports.
+## Веб-интерфейс
 
-## Web Interface
-
-The web interface is the easiest way to use the project.
-
-Start it with:
+Запуск:
 
 ```bash
 python -m pip install -r requirements.txt
 python web.py
 ```
 
-Then open:
+Откройте в браузере:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-Main pages:
+Основные страницы:
 
-- `Главная` - overview and entry points.
-- `Мои товары` - Seller API credentials, catalog sync, seller analytics, seller reports.
-- `Парсинг маркета` - запуск внешнего парсера или загрузка готового CSV.
-- `Сравнение` - compare a seller product with market data.
+- `Главная` — обзор и быстрые переходы.
+- `Мои товары` — Seller API, синхронизация и отчёты по каталогу.
+- `Парсинг маркета` — запуск внешнего парсера или загрузка готового CSV.
+- `Сравнение` — сравнение товара селлера с данными маркета.
 
-Users can register with email and password. After login they can:
+Интерфейс простой, компактный, со стеклянными плашками, мягким фоном и минималистичной навигацией.
 
-- save `OZON_CLIENT_ID` and `OZON_API_KEY`;
-- sync seller products;
-- launch market parsing;
-- upload ready CSV files;
-- download parsed datasets;
-- delete rows from a dataset and save the edited CSV;
-- create and download reports.
+## Как пользоваться
 
-The interface has a simple custom design with glass-like cards, a moving background video, and compact navigation.
+1. Зарегистрируйтесь или войдите.
+2. На странице `Мои товары` сохраните `OZON_CLIENT_ID` и `OZON_API_KEY`.
+3. Выполните синхронизацию каталога селлера.
+4. На странице `Парсинг маркета`:
+   - запустите внешний парсер по ссылке;
+   - либо загрузите готовый CSV;
+   - откройте набор данных;
+   - при необходимости удалите лишние строки и сохраните изменения.
+5. На странице `Сравнение` выберите свой товар и набор данных маркета.
 
-## Seller API Mode
+## Отчёты
 
-Seller API mode syncs products into SQLite and builds seller reports.
+Система создаёт три типа отчётов:
 
-Commands:
+- отчёт по товарам селлера;
+- отчёт по товарам маркета;
+- отчёт сравнения товара селлера с рынком.
 
-```bash
-python main.py seller check-api
-python main.py seller sync
-python main.py seller list
-python main.py seller show --seller-product-id 123456
-python main.py seller analyze
-```
+Отчёты можно скачать в форматах `TXT`, `JSON` и `XLSX`.
 
-Seller API credentials are stored per user in the web app and encrypted before being written to SQLite.
+## Внешний парсер
 
-## Market Parsing Mode
+Внешний парсер находится в `ozon-seller-parser/`.
 
-The external parser already exists in `ozon-seller-parser/`. Ozon Seller Radar does not rewrite it. It launches it as a subprocess, waits for the CSV, reads the result, and stores the parsed data.
-
-Web flow:
-
-1. Open `Парсинг маркета`.
-2. Paste an Ozon URL.
-3. Start parsing.
-4. Wait for the progress screen.
-5. Open the resulting dataset, download it, analyze it, or save it for later.
-
-CLI flow:
-
-```bash
-python main.py competitors parse --url "https://www.ozon.ru/search/?text=рюкзак+мужской" --yes
-```
-
-You can also analyze an already prepared CSV:
-
-```bash
-python main.py competitors analyze-csv --input data/parser_output/products.csv
-```
-
-## Comparison Mode
-
-Compare a seller product with market data:
-
-```bash
-python main.py compare product --seller-product-id 123456 --competitors-csv data/parser_output/products.csv
-```
-
-Or launch the parser first:
-
-```bash
-python main.py compare product --seller-product-id 123456 --competitors-url "https://www.ozon.ru/search/?text=рюкзак+мужской" --yes
-```
-
-If the seller product is not in SQLite yet, sync seller data first.
-
-## External Parser Notes
-
-The external parser lives in `ozon-seller-parser/`.
-
-- Entry point: `run.py`.
-- Actual workflow: `python run.py all`.
-- The parser reads its URL from `config.json` through `seller_url`.
-- The parser can open Chrome.
-- Headless mode is not used.
-- The output CSV is written to the parser output directory and then read by this project.
-- CSV columns:
+- Запускается без изменения его внутренней логики.
+- Использует свой `config.json`.
+- Может открывать окно Chrome.
+- Не закрывайте окно до завершения работы.
+- CSV от парсера содержит колонки:
   - `Название`
   - `Ссылка на товар`
   - `Артикул`
@@ -126,70 +87,22 @@ The external parser lives in `ozon-seller-parser/`.
   - `Количество отзывов`
   - `Средний отзыв`
 
-## Reports
 
-Parser analytics create:
+## Разработка
 
-```text
-reports/competitors_external_parser_{timestamp}/
-├── competitors_summary.txt
-├── competitor_products.json
-└── competitor_products.xlsx
-```
-
-Comparison creates:
-
-```text
-reports/compare_external_parser_{timestamp}/
-├── comparison_summary.txt
-├── comparison_result.json
-└── comparison_result.xlsx
-```
-
-Seller reports create:
-
-```text
-reports/user_<id>/seller_api_{timestamp}/
-├── seller_summary.txt
-├── seller_products.json
-└── seller_products.xlsx
-```
-
-## Configuration
-
-Copy `.env.example` to `.env` for CLI use.
-
-Important variables:
-
-```dotenv
-DATABASE_URL=sqlite:///data/ozon_seller_radar.db
-REPORTS_DIR=reports
-LOG_LEVEL=INFO
-OZON_CLIENT_ID=
-OZON_API_KEY=
-EXTERNAL_PARSER_PATH=ozon-seller-parser
-EXTERNAL_PARSER_OUTPUT_DIR=data/parser_output
-EXTERNAL_PARSER_TIMEOUT=900
-```
-
-The web app keeps user secrets encrypted in SQLite with a local key in `data/.secret.key`.
-
-## Development
-
-Install dependencies:
+Установка зависимостей:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Run tests:
+Запуск тестов:
 
 ```bash
 pytest
 ```
 
-## Notes
+## Примечания
 
-- The project keeps the external parser unchanged.
-- Runtime data such as SQLite, parser output, user uploads, and reports are ignored by Git.
-- The UI is intentionally simple and compact, with glass-style panels and a custom animated background.
+- Проект рассчитан на работу через браузер.
+- Веб-интерфейс специально сделан простым и быстрым, без перегруженного дизайна.
