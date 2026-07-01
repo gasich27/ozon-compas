@@ -139,12 +139,12 @@ nav a.active {
   transition: none;
   pointer-events: none;
 }
-.sidebar-note { margin-top: auto; padding: 13px 15px; border: 1px solid #000; border-radius: 15px; background: #050505; color: #ffe96c; font-size: 13px; }
+.sidebar-note { margin-top: auto; padding: 13px 15px; border: 1px solid #000; border-radius: 15px; background: #050505; color: #ffe96c; font-size: 13px; width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .job-progress { margin: 8px 0 0; color: #5b4300; font-size: 13px; font-weight: 500; }
 .job-progress strong { font-family: Unbounded, sans-serif; font-size: 14px; }
 .sidebar-note strong { color: #ffe96c; }
 .sidebar-login { display: block; margin-top: 10px; color: #ffe96c; font-weight: 800; }
-.account-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.account-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; width: 100%; }
 .account-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-row form { display: block; flex: 0 0 auto; }
 .link-button {

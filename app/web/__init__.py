@@ -430,10 +430,8 @@ def create_app(settings: Settings | None = None) -> Flask:
         )
         update_dataset_analysis(
             _database(settings),
-            g.user["id"],
             dataset_id,
             run_id,
-            len(products),
         )
         return render_template(
             "competitor_result.html",
@@ -785,7 +783,7 @@ def _run_parser_job(
             database,
             job_id,
             status="running",
-            message="Парсинг маркета выполняется",
+            message="Парсинг маркета выполняется. Оставьте страницу открытой и не закрывайте её примерно 10 минут, пока идет парсинг.",
         )
         parser_dir, _ = parser_paths(settings, None, None)
         output_dir = _user_data_dir(user_id) / "parser_output"

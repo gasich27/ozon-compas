@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ru">
 <head>
   <meta charset="utf-8">
@@ -47,7 +47,7 @@
   <main>
     <header class="topbar">
       <div><p class="eyebrow">{% block eyebrow %}Ozon Seller Radar{% endblock %}</p><h1>{% block heading %}Панель управления{% endblock %}</h1></div>
-      <span class="status early"><i></i> Ранний доступ</span>
+      <span class="status early">Ранний доступ</span>
     </header>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}

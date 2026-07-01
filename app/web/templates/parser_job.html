@@ -7,7 +7,7 @@
   data-cancel-url="{{ url_for('parser_job_cancel', job_id=job.id) }}">
   <div class="loader-orbit"><i></i><span>OR</span></div>
   <h2 id="job-title">Собираем товары маркета</h2>
-  <p id="job-message">{{ job.message }}</p>
+  <p id="job-message">Оставьте страницу открытой и не закрывайте её примерно 10 минут, пока идет парсинг.</p>
   <p id="job-progress" class="job-progress">Собрано: <strong id="job-progress-value">0</strong></p>
   <div class="progress-track"><span></span></div>
   <button id="cancel-job" class="button ghost danger">Отменить парсинг</button>
