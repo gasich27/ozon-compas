@@ -104,6 +104,8 @@ class Database:
                     url TEXT NOT NULL,
                     status TEXT NOT NULL,
                     message TEXT,
+                    processed_links INTEGER,
+                    total_links INTEGER,
                     dataset_id INTEGER,
                     error TEXT,
                     created_at TEXT NOT NULL,
@@ -121,6 +123,8 @@ class Database:
                 """
             )
             self._ensure_column(connection, "analysis_runs", "user_id", "INTEGER NOT NULL DEFAULT 0")
+            self._ensure_column(connection, "parser_jobs", "processed_links", "INTEGER")
+            self._ensure_column(connection, "parser_jobs", "total_links", "INTEGER")
 
     @staticmethod
     def _migrate_seller_products(connection: sqlite3.Connection) -> None:

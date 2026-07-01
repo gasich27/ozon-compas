@@ -23,6 +23,7 @@ from flask import (
     session,
     url_for,
 )
+from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.utils import secure_filename
 
 from app.cli.common import parser_paths, query_name_from_url, validate_ozon_url
@@ -305,6 +306,8 @@ def create_app(settings: Settings | None = None) -> Flask:
                 "status": job["status"],
                 "message": job["message"],
                 "error": job["error"],
+                "processed_links": job.get("processed_links"),
+                "total_links": job.get("total_links"),
                 "result_url": url_for(
                     "dataset_detail", dataset_id=job["dataset_id"]
                 )
@@ -484,6 +487,10 @@ def create_app(settings: Settings | None = None) -> Flask:
 
     @app.errorhandler(Exception)
     def handle_error(exc: Exception):
+        if isinstance(exc, HTTPException):
+            if isinstance(exc, NotFound):
+                return render_template("error.html", message="Страница не найдена."), 404
+            return exc
         if isinstance(
             exc,
             (
@@ -751,6 +758,28 @@ def _run_parser_job(
     cancel_event: threading.Event,
 ) -> None:
     database = Database(database_path)
+    progress_state = {"processed_links": None, "total_links": None}
+
+    def _progress_callback(processed: int | None, total: int | None) -> None:
+        if processed is not None:
+            progress_state["processed_links"] = processed
+        if total is not None:
+            progress_state["total_links"] = total
+        update_parser_job(
+            database,
+            job_id,
+            status="running",
+            message=(
+                f"Парсинг маркета выполняется"
+                + (
+                    f" ({progress_state['processed_links']}/{progress_state['total_links']})"
+                    if progress_state["processed_links"] is not None
+                    else ""
+                )
+            ),
+            processed_links=progress_state["processed_links"],
+            total_links=progress_state["total_links"],
+        )
     try:
         update_parser_job(
             database,
@@ -767,6 +796,7 @@ def _run_parser_job(
                 url=url,
                 query_name=query_name_from_url(url),
                 cancel_event=cancel_event,
+                progress_callback=_progress_callback,
             )
         products = CompetitorCsvReader().load(csv_path)
         stored_dir = _user_data_dir(user_id) / "datasets"
@@ -789,6 +819,8 @@ def _run_parser_job(
             job_id,
             status="success",
             message=f"Готово: собрано {len(products)} товаров",
+            processed_links=len(products),
+            total_links=len(products),
             dataset_id=dataset_id,
         )
     except ExternalParserCancelledError:

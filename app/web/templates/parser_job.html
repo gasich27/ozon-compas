@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block heading %}Парсинг маркета{% endblock %}
 {% block eyebrow %}Процесс выполняется{% endblock %}
 {% block content %}
@@ -8,6 +8,7 @@
   <div class="loader-orbit"><i></i><span>OR</span></div>
   <h2 id="job-title">Собираем товары маркета</h2>
   <p id="job-message">{{ job.message }}</p>
+  <p id="job-progress" class="job-progress">Собрано: <strong id="job-progress-value">0</strong></p>
   <div class="progress-track"><span></span></div>
   <button id="cancel-job" class="button ghost danger">Отменить парсинг</button>
 </section>
@@ -15,6 +16,7 @@
 const panel = document.querySelector('.job-panel');
 const message = document.querySelector('#job-message');
 const title = document.querySelector('#job-title');
+const progressValue = document.querySelector('#job-progress-value');
 const cancelButton = document.querySelector('#cancel-job');
 let stopped = false;
 cancelButton.addEventListener('click', async () => {
@@ -27,6 +29,11 @@ async function poll() {
   const response = await fetch(panel.dataset.jobUrl);
   const job = await response.json();
   message.textContent = job.message || '';
+  if (job.processed_links !== null && job.processed_links !== undefined) {
+    progressValue.textContent = job.total_links
+      ? `${job.processed_links}/${job.total_links}`
+      : String(job.processed_links);
+  }
   if (job.status === 'success') {
     window.location.href = job.result_url;
     return;

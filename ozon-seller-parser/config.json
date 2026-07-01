@@ -1,9 +1,9 @@
 {
-    "seller_url": "https://www.ozon.ru/seller/YOUR-SELLER-SLUG/CATEGORY/",
+    "seller_url": "https://www.ozon.ru/search/?from_global=true&text=очки+спортивные",
     "chrome_path": "",
-    "links_file": "product_links.txt",
-    "output_file": "product_details.csv",
-    "log_file": "parser.log",
+    "links_file": "D:\\asg\\ПРОЕКИ\\обход-PARSER OZON\\data\\users\\1\\parser_output\\product_links_20260701_182144_914302.txt",
+    "output_file": "D:\\asg\\ПРОЕКИ\\обход-PARSER OZON\\data\\users\\1\\parser_output\\очки_спортивные_20260701_182144_914302.csv",
+    "log_file": "D:\\asg\\ПРОЕКИ\\обход-PARSER OZON\\data\\users\\1\\parser_output\\parser_20260701_182144_914302.log",
     "scroll_pause": 5,
     "page_pause": 7,
     "max_retries": 50,

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import logging
@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Event
@@ -26,12 +27,7 @@ logger = logging.getLogger(__name__)
 class ExternalParserRunner:
     """Adapter for the existing ozon-seller-parser CLI."""
 
-    def __init__(
-        self,
-        parser_dir: str,
-        output_dir: str,
-        timeout_seconds: int = 900,
-    ):
+    def __init__(self, parser_dir: str, output_dir: str, timeout_seconds: int = 900):
         self.parser_dir = Path(parser_dir).expanduser().resolve()
         self.output_dir = Path(output_dir).expanduser().resolve()
         self.timeout_seconds = timeout_seconds
@@ -44,6 +40,7 @@ class ExternalParserRunner:
         query_name: str | None = None,
         limit: int | None = None,
         cancel_event: Event | None = None,
+        progress_callback: Callable[[int | None, int | None], None] | None = None,
     ) -> Path:
         del limit
         self._validate()
@@ -79,14 +76,15 @@ class ExternalParserRunner:
                 json.dumps(temporary_config, ensure_ascii=False, indent=4) + "\n",
                 encoding="utf-8",
             )
-            completed = (
-                self._run_cancellable(cancel_event, integration_log)
-                if cancel_event is not None
-                else self._run_sync(integration_log)
+            completed = self._run_process(
+                integration_log=integration_log,
+                cancel_event=cancel_event,
+                progress_callback=progress_callback,
             )
-            self._write_log(integration_log, completed.stdout, completed.stderr)
             if completed.returncode != 0:
-                detail = self._last_output_line(completed.stderr or completed.stdout)
+                detail = self._extract_failure_detail(
+                    completed.stdout or "", completed.stderr or ""
+                )
                 message = (
                     f"Внешний парсер завершился с кодом {completed.returncode}. "
                     f"Лог: {integration_log}"
@@ -107,64 +105,63 @@ class ExternalParserRunner:
         if fresh_csv_files:
             return max(fresh_csv_files, key=lambda path: path.stat().st_mtime)
         raise ExternalParserOutputNotFoundError(
-            f"Внешний парсер завершился, но свежий CSV не найден в "
-            f"{self.output_dir}. Проверьте лог: {integration_log}"
+            f"Внешний парсер завершился, но свежий CSV не найден в {self.output_dir}. "
+            f"Проверьте лог: {integration_log}"
         )
 
-    def _run_sync(self, integration_log: Path) -> subprocess.CompletedProcess:
-        try:
-            return subprocess.run(
-                [sys.executable, str(self.entrypoint), "all"],
-                cwd=self.parser_dir,
-                capture_output=True,
-                text=True,
-                timeout=self.timeout_seconds,
-                encoding="utf-8",
-                errors="replace",
-            )
-        except subprocess.TimeoutExpired as exc:
-            self._write_log(integration_log, exc.stdout or "", exc.stderr or "")
-            raise ExternalParserTimeoutError(
-                "Парсинг занял слишком много времени. Увеличьте timeout "
-                "или проверьте внешний парсер."
-            ) from exc
-
-    def _run_cancellable(
-        self, cancel_event: Event, integration_log: Path
+    def _run_process(
+        self,
+        integration_log: Path,
+        cancel_event: Event | None,
+        progress_callback: Callable[[int | None, int | None], None] | None,
     ) -> subprocess.CompletedProcess:
         process = subprocess.Popen(
             [sys.executable, str(self.entrypoint), "all"],
             cwd=self.parser_dir,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             encoding="utf-8",
             errors="replace",
         )
+        stdout_chunks: list[str] = []
         started = time.monotonic()
-        while process.poll() is None:
-            if cancel_event.is_set():
+        while True:
+            if cancel_event is not None and cancel_event.is_set():
                 self._terminate_process(process)
-                try:
-                    stdout, stderr = process.communicate(timeout=5)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    stdout, stderr = process.communicate()
-                self._write_log(integration_log, stdout, stderr)
+                stdout, _ = process.communicate(timeout=5)
+                if stdout:
+                    stdout_chunks.append(stdout)
+                self._write_log(integration_log, "".join(stdout_chunks), "")
                 raise ExternalParserCancelledError("Парсинг отменён пользователем.")
             if time.monotonic() - started > self.timeout_seconds:
                 process.kill()
-                stdout, stderr = process.communicate()
-                self._write_log(integration_log, stdout, stderr)
+                stdout, _ = process.communicate()
+                if stdout:
+                    stdout_chunks.append(stdout)
+                self._write_log(integration_log, "".join(stdout_chunks), "")
                 raise ExternalParserTimeoutError(
-                    "Парсинг занял слишком много времени. Увеличьте timeout "
-                    "или проверьте внешний парсер."
+                    "Парсинг занял слишком много времени. Увеличьте timeout или проверьте внешний парсер."
                 )
-            time.sleep(0.5)
-        stdout, stderr = process.communicate()
-        return subprocess.CompletedProcess(
-            process.args, process.returncode, stdout, stderr
-        )
+            if process.stdout is None:
+                break
+            line = process.stdout.readline()
+            if line:
+                stdout_chunks.append(line)
+                if progress_callback is not None:
+                    processed, total = self._parse_progress(line)
+                    if processed is not None or total is not None:
+                        progress_callback(processed, total)
+                continue
+            if process.poll() is not None:
+                break
+            time.sleep(0.1)
+        stdout, _ = process.communicate()
+        if stdout:
+            stdout_chunks.append(stdout)
+        stdout_text = "".join(stdout_chunks)
+        self._write_log(integration_log, stdout_text, "")
+        return subprocess.CompletedProcess(process.args, process.returncode, stdout_text, "")
 
     @staticmethod
     def _terminate_process(process: subprocess.Popen) -> None:
@@ -201,12 +198,46 @@ class ExternalParserRunner:
 
     @staticmethod
     def _write_log(path: Path, stdout: str, stderr: str) -> None:
-        path.write_text(
-            f"STDOUT\n{stdout}\n\nSTDERR\n{stderr}\n", encoding="utf-8"
-        )
+        path.write_text(f"STDOUT\n{stdout}\n\nSTDERR\n{stderr}\n", encoding="utf-8")
         logger.info("External parser subprocess log: %s", path)
 
     @staticmethod
     def _last_output_line(output: str) -> str:
         lines = [line.strip() for line in output.splitlines() if line.strip()]
         return lines[-1] if lines else ""
+
+    @staticmethod
+    def _parse_progress(line: str) -> tuple[int | None, int | None]:
+        text = line.lower()
+        match = re.search(r"(\d+)\s*/\s*(\d+)", text)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+        match = re.search(r"собрано\s+(\d+)", text)
+        if match:
+            return int(match.group(1)), None
+        return None, None
+
+    @staticmethod
+    def _extract_failure_detail(stdout: str, stderr: str) -> str:
+        combined = "\n".join(part for part in (stdout, stderr) if part)
+        if "ChromeDriver only supports Chrome version" in combined:
+            return (
+                "Несовместимые версии Chrome и ChromeDriver. "
+                "Нужно обновить браузер или драйвер внешнего парсера."
+            )
+        if "Current browser version is" in combined:
+            return (
+                "Версия установленного Chrome не совпадает с ChromeDriver. "
+                "Обновите Chrome или внешний драйвер."
+            )
+        if "session not created: cannot connect to chrome" in combined:
+            return (
+                "Внешний парсер не смог подключиться к Chrome. "
+                "Проверьте установленный браузер и ChromeDriver."
+            )
+        if "WinError 6" in combined or "OSError: [WinError 6]" in combined:
+            return (
+                "Внешний парсер завершился с ошибкой управления Chrome. "
+                "Скорее всего, у браузера и драйвера разные версии."
+            )
+        return ExternalParserRunner._last_output_line(stderr or stdout)

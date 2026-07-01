@@ -105,8 +105,8 @@ a { color: inherit; }
 .brand { display: block; text-decoration: none; color: #050505; font-family: Unbounded, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -.07em; text-transform: uppercase; }
 .brand small { display: block; margin-top: 2px; color: #858585; font-family: Steppe, sans-serif; font-size: 15px; font-weight: 500; letter-spacing: -0.04em; text-transform: lowercase; }
 .brand-mark { display: none; }
-nav { position: relative; display: grid; gap: 12px; margin-top: 82px; }
-nav a { position: relative; z-index: 2; padding: 16px 20px; border: 0; border-radius: 999px; text-decoration: none; color: #111; font-size: 17px; font-weight: 500; letter-spacing: -0.05em; transition: color .18s ease, background .18s ease; }
+nav { position: relative; display: grid; gap: 12px; margin-top: 82px; align-items: start; }
+nav a { position: relative; z-index: 2; min-height: 54px; padding: 0 20px; border: 0; border-radius: 999px; text-decoration: none; color: #111; font-size: 16px; font-weight: 400; letter-spacing: -0.05em; display: flex; align-items: center; justify-content: flex-start; text-align: left; transition: color .18s ease, background .18s ease; }
 nav a:hover {
   background:
     radial-gradient(circle at 18% 0%, rgba(255,255,255,.62), transparent 38%),
@@ -116,6 +116,11 @@ nav a:hover {
 nav a.active {
   background: transparent;
   color: #050505;
+  font-weight: 500;
+}
+.nav-indicator,
+nav a.active {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.72), 0 6px 16px rgba(75,51,0,.1);
 }
 .nav-indicator {
   position: absolute;
@@ -135,6 +140,8 @@ nav a.active {
   pointer-events: none;
 }
 .sidebar-note { margin-top: auto; padding: 13px 15px; border: 1px solid #000; border-radius: 15px; background: #050505; color: #ffe96c; font-size: 13px; }
+.job-progress { margin: 8px 0 0; color: #5b4300; font-size: 13px; font-weight: 500; }
+.job-progress strong { font-family: Unbounded, sans-serif; font-size: 14px; }
 .sidebar-note strong { color: #ffe96c; }
 .sidebar-login { display: block; margin-top: 10px; color: #ffe96c; font-weight: 800; }
 .account-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
@@ -478,3 +485,6 @@ code { padding: 2px 5px; background: #ece9df; border-radius: 5px; }
   .nav-indicator { transition: none; }
   body { animation: none; }
 }
+
+
+
