@@ -46,7 +46,12 @@
 }
 
 * { box-sizing: border-box; }
-html { background: #fff8e4; overflow-x: hidden; }
+html {
+  background: #fff8e4;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
 body {
   margin: 0;
   width: 100%;
@@ -139,12 +144,12 @@ nav a.active {
   transition: none;
   pointer-events: none;
 }
-.sidebar-note { margin-top: auto; padding: 13px 15px; border: 1px solid #000; border-radius: 15px; background: #050505; color: #ffe96c; font-size: 13px; width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.sidebar-note { margin-top: auto; padding: 13px 15px; border: 1px solid #000; border-radius: 15px; background: #050505; color: #ffe96c; font-size: 13px; width: auto; align-self: flex-start; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .job-progress { margin: 8px 0 0; color: #5b4300; font-size: 13px; font-weight: 500; }
 .job-progress strong { font-family: Unbounded, sans-serif; font-size: 14px; }
 .sidebar-note strong { color: #ffe96c; }
 .sidebar-login { display: block; margin-top: 10px; color: #ffe96c; font-weight: 800; }
-.account-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; width: 100%; }
+.account-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; width: 100%; white-space: nowrap; }
 .account-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-row form { display: block; flex: 0 0 auto; }
 .link-button {
@@ -155,10 +160,19 @@ nav a.active {
   color: #d7d7d7;
   font: inherit;
   font-size: 11px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
   cursor: pointer;
   text-transform: uppercase;
   -webkit-backdrop-filter: blur(10px) saturate(1.25);
   backdrop-filter: blur(10px) saturate(1.25);
+}
+.account-row form,
+.account-row button {
+  margin: 0;
 }
 main { padding: 34px 42px 70px 28px; min-width: 0; max-width: 100%; overflow-x: hidden; }
 .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
@@ -311,7 +325,10 @@ dd { margin: 7px 0 0; font-weight: 800; }
 .dataset-source { color: #765300; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .dataset-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .dataset-head p { margin: 12px 0 0; }
-.job-panel { min-height: 440px; display: grid; place-items: center; align-content: center; text-align: center; overflow: hidden; }
+.job-panel { min-height: 440px; min-width: 0; display: grid; place-items: center; align-content: center; text-align: center; overflow: hidden; }
+.parser-actions { min-width: 0; }
+.parser-actions .form-card { min-height: 240px; }
+.parser-actions .form-card:last-child { min-height: 272px; }
 .job-panel h2 { margin: 24px 0 10px; font-size: 36px; }
 .loader-orbit { position: relative; display: grid; place-items: center; width: 110px; height: 110px; border: 1px solid #111; border-radius: 50%; background: var(--yellow); color: #111; font-family: Unbounded; }
 .loader-orbit i { position: absolute; inset: -12px; border: 3px solid transparent; border-top-color: var(--lime); border-right-color: var(--orange); border-radius: 50%; animation: spin 1.1s linear infinite; }

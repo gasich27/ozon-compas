@@ -1,9 +1,9 @@
 {
-    "seller_url": "https://www.ozon.ru/category/ochki-solntsezashchitnye-zhenskie-17019/?category_was_predicted=true&color=100955536&delivery=4&deny_category_prediction=true&from_global=true&text=очки+jagermeister+мужские",
+    "seller_url": "https://www.ozon.ru/search/?text=кроссовки+kiko+kostadinov&from_global=true",
     "chrome_path": "",
-    "links_file": "D:\\asg\\ПРОЕКИ\\обход-PARSER OZON\\data\\users\\1\\parser_output\\product_links_20260701_193621_637133.txt",
-    "output_file": "D:\\asg\\ПРОЕКИ\\обход-PARSER OZON\\data\\users\\1\\parser_output\\очки_jagermeister_мужские_20260701_193621_637133.csv",
-    "log_file": "D:\\asg\\ПРОЕКИ\\обход-PARSER OZON\\data\\users\\1\\parser_output\\parser_20260701_193621_637133.log",
+    "links_file": "D:\\asg\\ПРОЕКИ\\обход-PARSER OZON\\data\\users\\1\\parser_output\\product_links_20260701_200614_187305.txt",
+    "output_file": "D:\\asg\\ПРОЕКИ\\обход-PARSER OZON\\data\\users\\1\\parser_output\\кроссовки_kiko_kostadinov_20260701_200614_187305.csv",
+    "log_file": "D:\\asg\\ПРОЕКИ\\обход-PARSER OZON\\data\\users\\1\\parser_output\\parser_20260701_200614_187305.log",
     "scroll_pause": 5,
     "page_pause": 7,
     "max_retries": 50,
